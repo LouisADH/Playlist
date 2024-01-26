@@ -1,0 +1,149 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    char nom[50];
+    int duree;
+} Musique;
+
+typedef struct {
+    Musique* musiques;
+    int taille;
+    int capacite;
+    int tempsTotal;
+} Playlist;
+
+void initialiserPlaylist(Playlist* playlist) {
+    playlist->musiques = NULL;
+    playlist->taille = 0;
+    playlist->capacite = 0;
+    playlist->tempsTotal = 0;
+}
+
+void afficherPlaylist(const Playlist* playlist) {
+    printf("\nPlaylist :\n");
+    for (int i = 0; i < playlist->taille; ++i) {
+        printf("%d. %s - %d secondes\n", i + 1, playlist->musiques[i].nom, playlist->musiques[i].duree);
+    }
+    printf("\nTemps total de la playlist : %d secondes\n", playlist->tempsTotal);
+}
+
+void ajouterMusique(Playlist* playlist) {
+    Musique nouvelleMusique;
+
+    printf("Nom de la piste : ");
+    scanf("%s", nouvelleMusique.nom);
+
+    printf("Duree de la piste (en secondes) : ");
+    scanf("%d", &nouvelleMusique.duree);
+
+    // Ajuster la capacité si nécessaire
+    if (playlist->taille == playlist->capacite) {
+        playlist->capacite = (playlist->capacite == 0) ? 1 : playlist->capacite * 2;
+        playlist->musiques = realloc(playlist->musiques, playlist->capacite * sizeof(Musique));
+    }
+
+    // Ajouter la nouvelle musique
+    playlist->musiques[playlist->taille++] = nouvelleMusique;
+    playlist->tempsTotal += nouvelleMusique.duree;
+
+    printf("Musique ajoutee avec succes!\n");
+}
+
+void deplacerMusique(Playlist* playlist) {
+    int source, destination;
+
+    printf("Indice de la musique a deplacer : ");
+    scanf("%d", &source);
+
+    if (source < 1 || source > playlist->taille) {
+        printf("Indice invalide!\n");
+        return;
+    }
+
+    printf("Nouvel indice de la musique : ");
+    scanf("%d", &destination);
+
+    if (destination < 1 || destination > playlist->taille) {
+        printf("Indice invalide!\n");
+        return;
+    }
+
+    // Déplacer la musique
+    Musique temp = playlist->musiques[source - 1];
+    memmove(&playlist->musiques[destination], &playlist->musiques[destination - 1], (source - destination) * sizeof(Musique));
+    playlist->musiques[destination - 1] = temp;
+
+    printf("Musique deplacee avec succes!\n");
+}
+
+void supprimerMusique(Playlist* playlist) {
+    int indice;
+
+    printf("Indice de la musique a supprimer : ");
+    scanf("%d", &indice);
+
+    if (indice < 1 || indice > playlist->taille) {
+        printf("Indice invalide!\n");
+        return;
+    }
+
+    // Mettre à jour le temps total
+    playlist->tempsTotal -= playlist->musiques[indice - 1].duree;
+
+    // Supprimer la musique
+    memmove(&playlist->musiques[indice - 1], &playlist->musiques[indice], (playlist->taille - indice) * sizeof(Musique));
+    playlist->taille--;
+
+    printf("Musique supprimee avec succes!\n");
+}
+
+int main() {
+    Playlist maPlaylist;
+    int choix;
+
+    initialiserPlaylist(&maPlaylist);
+
+    do {
+        printf("\nMenu :\n");
+        printf("1- Cree une playlist\n");
+        printf("2- Afficher la playlist\n");
+        printf("3- Deplacer une musique\n");
+        printf("4- Ajouter une musique\n");
+        printf("5- Supprimer une musique\n");
+        printf("6- Quitter\n");
+
+        printf("Choix : ");
+        scanf("%d", &choix);
+
+        switch (choix) {
+            case 1:
+                initialiserPlaylist(&maPlaylist);
+                printf("Playlist creee avec succes!\n");
+                break;
+            case 2:
+                afficherPlaylist(&maPlaylist);
+                break;
+            case 3:
+                deplacerMusique(&maPlaylist);
+                break;
+            case 4:
+                ajouterMusique(&maPlaylist);
+                break;
+            case 5:
+                supprimerMusique(&maPlaylist);
+                break;
+            case 6:
+                printf("Au revoir!\n");
+                break;
+            default:
+                printf("Choix invalide!\n");
+        }
+    } while (choix != 6);
+
+    // Libérer la mémoire allouée pour les musiques
+    free(maPlaylist.musiques);
+
+    return 0;
+}
